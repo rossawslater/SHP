@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 class Smoluchowski():
 	"""Simulator using Smoluchowski Eqn"""
 	def __init__(self, init_no_particles, sim_length, k = 1, max_agg_size = 4):
@@ -82,10 +81,7 @@ class Smoluchowski():
 		plt.title("Smoluchowski Aggregation Model")
 		plt.legend()
 		plt.show()	
-	
-					
-
-
+		
 def main():
 	sim = Smoluchowski(35, 10000, 0.00005, 4)
 	sim.run_sim()
