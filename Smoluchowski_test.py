@@ -14,10 +14,7 @@ class Smoluchowski():
 		self.aggregates = np.zeros(self.max_agg_size)
 		self.aggregates[1] = self.init_no_particles #set number of aggregate of size one to initial number of particles 
 
-		self.data = []
-
-		for i in range(len(self.aggregates)):
-			self.data.append([]) #make data have empty list for each aggregate size, to pupulate over time
+		self.data = np.zeros((self.sim_length, self.max_agg_size)) #+1 for tau
 
 		self.tau = 2/(self.k * self.init_no_particles)
 		self.ttau = [] #list for holding time/tau values  
@@ -30,6 +27,8 @@ class Smoluchowski():
 
 		self.dt = 0.0001 #1 is arbritary, actual value possibly physically related to k
 
+		
+
 	def produce(self,j,i):
 		self.aggregates[j] += (self.k/2 * (self.aggregates[i]*self.aggregates[j-i]*self.dt))
 
@@ -39,8 +38,8 @@ class Smoluchowski():
 		else:
 			self.aggregates[j] -= (self.k*self.aggregates[j]*self.aggregates[i]*self.dt)
 
-	def get_j_counts_at_step(self,j):
-		self.data[j].append(self.aggregates[j]/self.init_no_particles)
+	def get_j_counts_at_step(self,j,t):
+		self.data[t,j]=self.aggregates[j]/self.init_no_particles
 
 	def add_aggregate_count(self):
 		self.current_no_aggregates.append(self.aggregate_count/self.init_no_particles)
@@ -62,7 +61,7 @@ class Smoluchowski():
 			self.add_particle_count() 
 
 			for j in range(1,self.max_agg_size):			
-				self.get_j_counts_at_step(j)
+				self.get_j_counts_at_step(j,t)
 
 				for i in range(1,self.max_agg_size):
 					self.decay(j,i)
@@ -73,27 +72,32 @@ class Smoluchowski():
 				self.count_total_particles(j)
 
 			self.ttau.append(t/self.tau)
-				
+			
+			
 	def plot(self):
-		for i in range(1,5):#len(self.data)):
-			plt.plot(self.ttau,self.data[i], label = "N%i"%(i))
+		for i in range(1, self.max_agg_size):
+			print self.data[:,i]
+			plt.plot(self.ttau,self.data[:,i], label = "N%i"%(i))
 	
-		plt.plot(self.ttau, self.current_no_aggregates, label = "Total no. of aggregates") #no. aggregates as func time
+		# plt.plot(self.ttau, self.current_no_aggregates, label = "Total no. of aggregates") #no. aggregates as func time
 		plt.plot(self.ttau, self.current_no_particles, label = "Total number of particles") #should be horizonta line at 1 but is decaying 
 		plt.xlabel("t / tau")
 		plt.ylabel("N/N_total")
 		plt.title("Smoluchowski Aggregation Model")
 		x1,x2,y1,y2 = plt.axis()
 		plt.axis((x1,x2,y1,1.1))
-		plt.legend()
+		# plt.legend()
 		plt.show()	
 	
 					
 
 
 def main():
-	sim = Smoluchowski(35, 5000, 1, 100)
+	# sim = Smoluchowski(35, 5000, 1, 100)
+	sim = Smoluchowski(35, 100000, 1, 50)
+	# print sim.data
 	sim.run_sim()
+	print sim.data
 	sim.plot()
 	# sim(100, 300, 0.00075, 4).update()
 main()
