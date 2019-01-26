@@ -79,12 +79,10 @@ class Smoluchowski():
 
 	def run_analytical(self):
 		for t in range(0,self.sim_length):
-			self.add_aggregate_count()
-			self.add_particle_count()
 
 			for j in range(1,self.max_agg_size):
 
-				self.aggregates[j] = self.init_no_particles * (1 + t/self.tau)**(-j-1)
+				self.aggregates[j] = self.init_no_particles * (t/self.tau)**(j-1) * (1 + (t/self.tau))**(-j-1)
 				self.get_j_counts_at_step(j,t)
 
 			self.ttau.append(t/self.tau)
@@ -176,9 +174,9 @@ class PlotExperimental():
 
 def main():
 	# sim = Smoluchowski(35, 5000, 1, 100)
-	sim = Smoluchowski(35, 20, 1, 10)
+	sim = Smoluchowski(300, 20, 1, 10)
 	# exp = PlotExperimental().plot()
-	# sim.run_sim()
-	sim.run_analytical()
+	sim.run_sim()
+	# sim.run_analytical()
 	sim.plot()
 main()
