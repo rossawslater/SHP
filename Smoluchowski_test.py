@@ -26,10 +26,12 @@ class Smoluchowski():
 		self.aggregate_count = self.init_no_particles #count of aggregates and particles in system is initallised as initial no particles
 		self.particle_count = self.init_no_particles
 
-		self.dt = 0.0075
+		self.dt = 0.1
 
 		self.weighted_data = np.zeros((self.sim_length, self.max_agg_size))
 		print self.k
+
+		self.gavins_times = [103,137,162,201,252,297]
 
 	def produce(self,j,i):
 		self.aggregates[j] += (self.k/2 * (self.aggregates[i]*self.aggregates[j-i]*self.dt))
@@ -68,7 +70,7 @@ class Smoluchowski():
 	def run_sim(self):
 		self.current_max_agg_size = self.max_agg_size
 		for t in range(0,self.sim_length):
-			self.grow()
+			# self.grow()
 			self.add_aggregate_count()
 			self.add_particle_count()
 
@@ -133,19 +135,33 @@ class Smoluchowski():
 
 	def plot_hist(self):
 
-		# x = 0
-		for i in range(1,self.max_agg_size):
-			plt.plot(self.data[self.peaks[i],:], label = "N%i"%(i))
+		x = 0
+		# for i in range(1,self.max_agg_size):
+		# 	plt.plot(self.data[self.peaks[i],:], label = "N%i"%(i))
+		# 	x1,x2,y1,y2 = plt.axis()
+		# 	plt.axis((1,x2,y1,1))
+		# 	plt.title("Peak in aggregates of size %i"%(i))
+		# 	plt.ylabel("Probability of Bacteria being in Agg of size N")
+		# 	plt.xlabel("Aggregate Size N")
+		# 	# plt.savefig("Peak at N%i.pdf"%(i))
+		# 	# plt.show()
+		# 	print np.sum(self.data[self.peaks[i],1:]) #total probablility not conserved
+		# 	# x += np.sum(self.data[self.peaks[i],1:])
+		# print "x/N =", x/self.max_agg_size
+		for i in self.gavins_times:
+			print i
+			print self.data[(i*10)]
+			print self.ttau[(i*10)]
+			plt.plot(self.data[(i*10),:], label = "N%i"%(i))
 			x1,x2,y1,y2 = plt.axis()
 			plt.axis((1,x2,y1,1))
-			plt.title("Peak in aggregates of size %i"%(i))
+			plt.title("Distribution of Aggregates at %i Minutes"%(i))
 			plt.ylabel("Probability of Bacteria being in Agg of size N")
 			plt.xlabel("Aggregate Size N")
 			# plt.savefig("Peak at N%i.pdf"%(i))
 			plt.show()
-			print np.sum(self.data[self.peaks[i],1:]) #total probablility not conserved
+			print np.sum(self.data[(i*10),1:]) #total probablility not conserved
 			# x += np.sum(self.data[self.peaks[i],1:])
-		# print "x/N =", x/self.max_agg_size
 
 
 
@@ -187,7 +203,7 @@ class PlotExperimental():
 
 
 def main():
-	sim = Smoluchowski(200, 20000, 1, 10)
+	sim = Smoluchowski(200, 3000, 1, 10)
 	# exp = PlotExperimental().plot()
 	sim.run_sim()
 	# sim.run_analytical()
