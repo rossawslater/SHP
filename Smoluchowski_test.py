@@ -16,7 +16,7 @@ class Smoluchowski():
 
 		self.data = np.zeros((self.sim_length, self.max_agg_size)) #+1 for tau
 
-		self.tau = 2/(self.k * self.init_no_particles)
+		self.tau = 2/(self.k * self.init_no_particles) #t/tau needed to mimic plot from textbook
 		self.time = [] #list for holding time
 
 		self.current_no_aggregates = [] #empty lists for keeping track of aggregate and particle numbers over time
@@ -51,11 +51,11 @@ class Smoluchowski():
 	def get_weighted_j_counts_at_step(self,j,t): #dont ned this as already probablility?
 		self.weighted_data[t,j] = (self.aggregates[j]*j)/self.init_no_particles
 
-	def add_aggregate_count(self):
+	def get_aggregate_count(self):
 		self.current_no_aggregates.append(self.aggregate_count/self.init_no_particles)
 		self.aggregate_count = 0
 
-	def add_particle_count(self):
+	def get_particle_count(self):
 		self.current_no_particles.append(self.particle_count/self.init_no_particles)
 		self.particle_count = 0
 
@@ -66,19 +66,19 @@ class Smoluchowski():
 		self.particle_count += self.aggregates[j]*j
 
 	def run_sim(self):
-		self.current_max_agg_size = self.max_agg_size
+		# self.current_max_agg_size = self.max_agg_size
 		for t in range(0,self.sim_length):
 			# self.grow()
-			self.add_aggregate_count()
-			self.add_particle_count()
+			self.get_aggregate_count()
+			self.get_particle_count()
 
-			# for j in range(1,self.max_agg_size):
-			for j in range(1,self.current_max_agg_size):
+			for j in range(1,self.max_agg_size):
+			# for j in range(1,self.current_max_agg_size):
 				self.get_j_counts_at_step(j,t)
 				self.get_weighted_j_counts_at_step(j,t)
 
-				# for i in range(1,self.max_agg_size):
-				for i in range(1,self.current_max_agg_size):
+				for i in range(1,self.max_agg_size):
+				# for i in range(1,self.current_max_agg_size):
 					self.decay(j,i)
 					if j != 1 and i < j:
 						self.produce(j,i)
@@ -88,8 +88,7 @@ class Smoluchowski():
 
 			self.time.append(t*self.dt)
 			print t*self.dt
-			# sys.stdout.write(" Simulation progress: %.1f%%   \r" %(t*100/float(self.sim_length)))
-			# sys.stdout.flush()
+
 
 	def run_analytical(self):
 		for t in range(0,self.sim_length):
