@@ -5,20 +5,19 @@ import sys
 
 class Smoluchowski():
 	"""Simulator using Smoluchowski Eqn"""
-	def __init__(self, init_no_particles, sim_length, k = 1, max_agg_size = 5):
+	def __init__(self, init_no_particles, sim_length, max_agg_size = 5, k = 6E-4,):
 		self.init_no_particles = init_no_particles
 		self.sim_length = sim_length #number of time steps for simulation
-		self.k = float(k)
-		self.k = 6E-4
+		self.k = k
 		self.max_agg_size = (max_agg_size + 1)#+1 so we can index from 1 not 0
-		self.current_max_agg_size = 2 #need to adjust length of data array if using this?
+		# self.current_max_agg_size = 2 #need to adjust length of data array if using this?
 		self.aggregates = np.zeros(self.max_agg_size)
 		self.aggregates[1] = self.init_no_particles #set number of aggregate of size one to initial number of particles
 
 		self.data = np.zeros((self.sim_length, self.max_agg_size)) #+1 for tau
 
 		self.tau = 2/(self.k * self.init_no_particles)
-		self.ttau = [] #list for holding time/tau values
+		self.time = [] #list for holding time
 
 		self.current_no_aggregates = [] #empty lists for keeping track of aggregate and particle numbers over time
 		self.current_no_particles = []
@@ -29,7 +28,6 @@ class Smoluchowski():
 		self.dt = 0.1
 
 		self.weighted_data = np.zeros((self.sim_length, self.max_agg_size))
-		print self.k
 
 		self.gavins_times = [103,137,162,201,252,297]
 
@@ -48,7 +46,7 @@ class Smoluchowski():
 
 	def get_j_counts_at_step(self,j,t):
 		self.data[t,j]=self.aggregates[j]*j/self.init_no_particles
-		# self.data[t,j]=self.aggregates[j]/self.init_no_particles
+		self.data[t,j]=self.aggregates[j]/self.init_no_particles
 
 	def get_weighted_j_counts_at_step(self,j,t): #dont ned this as already probablility?
 		self.weighted_data[t,j] = (self.aggregates[j]*j)/self.init_no_particles
@@ -85,12 +83,10 @@ class Smoluchowski():
 					if j != 1 and i < j:
 						self.produce(j,i)
 
-
 				self.count_total_aggregates(j)
 				self.count_total_particles(j)
 
-
-			self.ttau.append(t*self.dt)
+			self.time.append(t*self.dt)
 			print t*self.dt
 			# sys.stdout.write(" Simulation progress: %.1f%%   \r" %(t*100/float(self.sim_length)))
 			# sys.stdout.flush()
@@ -104,7 +100,7 @@ class Smoluchowski():
 
 				self.get_j_counts_at_step(j,t)
 
-			self.ttau.append(t/self.tau)
+			self.time.append(t/self.tau)
 
 		for i in self.data:
 			print(i[1]/self.init_no_particles)
@@ -113,10 +109,23 @@ class Smoluchowski():
 		for i in range(1,self.max_agg_size):
 			# print(self.data[:,i])
 			print "\n", np.argmax(self.data[:,i])
-			plt.plot(self.ttau,self.data[:,i], label = "N%i"%(i))
-			# plt.plot(self.ttau,self.weighted_data[:,i], label = "N%i"%(i))
-		# plt.plot(self.ttau, self.current_no_aggregates, label = "Total no. of aggregates") #no. aggregates as func time
-		# plt.plot(self.ttau, self.current_no_particles, label = "Total number of particles") #should be horizonta line at 1 but is decaying
+			plt.plot(self.time,self.data[:,i], label = "N%i"%(i))
+			# plt.plot(self.time,self.weighted_data[:,i], label = "N%i"%(i))
+		# plt.plot(self.time, self.current_no_aggregates, label = "Total no. of aggregates") #no. aggregates as func time
+		# plt.plot(self.time, self.current_no_particles, label = "Total number of particles") #should be horizonta line at 1 but is decaying
+
+		plt.xlabel("t")
+		plt.ylabel("N/N Initial")
+		plt.title("Smoluchowski Aggregation Model")
+		x1,x2,y1,y2 = plt.axis()
+		# plt.axis((x1,x2,y1,1.1))
+		# plt.legend(bbox_to_anchor=(0.5, 0.8), loc=2, borderaxespad=0.)
+		plt.show()
+
+		for i in range(1,self.max_agg_size):
+			plt.plot(self.time,self.weighted_data[:,i], label = "N%i"%(i))
+		# plt.plot(self.time, self.current_no_aggregates, label = "Total no. of aggregates") #no. aggregates as func time
+		# plt.plot(self.time, self.current_no_particles, label = "Total number of particles") #should be horizonta line at 1 but is decaying
 
 		plt.xlabel("t")
 		plt.ylabel("N/N Initial")
@@ -134,25 +143,13 @@ class Smoluchowski():
 		print self.peaks
 
 	def plot_hist(self):
-
 		x = 0
-		# for i in range(1,self.max_agg_size):
-		# 	plt.plot(self.data[self.peaks[i],:], label = "N%i"%(i))
-		# 	x1,x2,y1,y2 = plt.axis()
-		# 	plt.axis((1,x2,y1,1))
-		# 	plt.title("Peak in aggregates of size %i"%(i))
-		# 	plt.ylabel("Probability of Bacteria being in Agg of size N")
-		# 	plt.xlabel("Aggregate Size N")
-		# 	# plt.savefig("Peak at N%i.pdf"%(i))
-		# 	# plt.show()
-		# 	print np.sum(self.data[self.peaks[i],1:]) #total probablility not conserved
-		# 	# x += np.sum(self.data[self.peaks[i],1:])
-		# print "x/N =", x/self.max_agg_size
 		for i in self.gavins_times:
 			print i
 			print self.data[(i*10)]
-			print self.ttau[(i*10)]
-			plt.plot(self.data[(i*10),:], label = "N%i"%(i))
+			print self.time[(i*10)]
+			# plt.plot(self.data[(i*10),:], label = "N%i"%(i))
+			plt.plot(self.weighted_data[(i*10),:], label = "N%i"%(i))
 			x1,x2,y1,y2 = plt.axis()
 			plt.axis((1,x2,y1,1))
 			plt.title("Distribution of Aggregates at %i Minutes"%(i))
@@ -161,54 +158,14 @@ class Smoluchowski():
 			# plt.savefig("Peak at N%i.pdf"%(i))
 			plt.show()
 			print np.sum(self.data[(i*10),1:]) #total probablility not conserved
-			# x += np.sum(self.data[self.peaks[i],1:])
-
-
-
-class PlotExperimental():
-
-	def __init__(self, file = "Gavins_data/weight_time_297_min.dat"):
-		self.file = str(file)
-		self.read_data()
-
-	def read_data(self): #reads in data and uses numpy to make it array like objects
-
-		data = np.loadtxt(self.file)
-
-		self.area_x = []
-		self.agg_size_y = []
-
-		for i in range(len(data)):
-			self.area_x.append(data[i,0])
-			self.agg_size_y.append(data[i,1])
-		print(data)
-
-		self.total = 0
-		for i in range(len(data)):
-			self.total += self.agg_size_y[i]
-		print self.total
-
-		return (self.area_x,self.agg_size_y)
-
-	def plot(self):
-		plt.plot(self.area_x, (self.agg_size_y/self.total), label = "experimental") #should be horizonta line at 1 but is decaying
-		# plt.plot(np.log(self.area_x), np.log((self.agg_size_y/self.total)), label = "experimental") #logged
-		plt.ylabel("N/N_total")
-		plt.title("Smoluchowski Aggregation Model")
-		x1,x2,y1,y2 = plt.axis()
-		plt.axis((x1,200,y1,y2))
-		# plt.legend()
-		plt.legend(bbox_to_anchor=(0.5, 0.8), loc=2, borderaxespad=0.)
-		plt.show()
-
+			x += np.sum(self.data[(i*10),1:])
+		print x
 
 def main():
-	sim = Smoluchowski(200, 3000, 1, 10)
-	# exp = PlotExperimental().plot()
+	sim = Smoluchowski(200, 3000, 100)
 	sim.run_sim()
 	# sim.run_analytical()
-
 	sim.plot()
-	sim.find_peaks() #WHAT TIME? IS THIS PLOTTED FOR?
+	sim.find_peaks()
 	sim.plot_hist()
 main()
