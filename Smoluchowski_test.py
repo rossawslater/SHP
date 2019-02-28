@@ -45,7 +45,7 @@ class Smoluchowski():
 
 	def grow(self):
 		self.aggregates[1] += 1.023*self.dt*self.aggregates[1]*10
-		# self.aggregates[1] = self.init_no_particles
+
 
 	def get_j_counts_at_step(self,j,t):
 		# self.data[t,j]=self.aggregates[j]*j/self.init_no_particles
@@ -91,6 +91,8 @@ class Smoluchowski():
 
 			self.time.append(t*self.dt)
 			self.data[t,0] = t*self.dt
+			self.weighted_data[t,0] = t*self.dt
+
 			print t*self.dt
 
 	def run_analytical(self):
@@ -109,10 +111,7 @@ class Smoluchowski():
 
 	def plot(self):
 		for i in range(1,len(self.data[0])):#self.max_agg_size):
-			# print(self.data[:,i])
-			# print "\n", np.argmax(self.data[:,i])
-			print len(self.time), len(self.data[:,i])
-			# plt.plot(self.time,self.data[:,i], label = "N%i"%(i))
+			plt.plot(self.data[:,0],self.data[:,i], label = "N%i"%(i))
 
 		plt.xlabel("t")
 		plt.ylabel("N/N Initial")
@@ -124,8 +123,6 @@ class Smoluchowski():
 
 		for i in range(1,self.max_agg_size):
 			plt.plot(self.weighted_data[:,0],self.weighted_data[:,i], label = "N%i"%(i))
-		# plt.plot(self.time, self.current_no_aggregates, label = "Total no. of aggregates") #no. aggregates as func time
-		# plt.plot(self.time, self.current_no_particles, label = "Total number of particles") #should be horizonta line at 1 but is decaying
 
 		plt.xlabel("t")
 		plt.ylabel("N/N Initial")
@@ -138,11 +135,9 @@ class Smoluchowski():
 	def plot_hist(self):
 		x = 0
 		for i in self.gavins_times:
-			# print i
-			# print self.data[(i*10)]
-			# print self.time[(i*10)]
-			# plt.plot(self.data[(i*10),:], label = "N%i"%(i))
-			plt.plot(self.weighted_data[(i*10),:], label = "N%i"%(i))
+			t = i*(self.dt)
+			print t
+			plt.plot(self.weighted_data[t,:])#, label = "N%i"%(i))
 			x1,x2,y1,y2 = plt.axis()
 			plt.axis((1,200,y1,2000))
 			plt.title("Distribution of Aggregates at %i Minutes"%(i))
@@ -150,24 +145,37 @@ class Smoluchowski():
 			plt.xlabel("Aggregate Size N")
 			plt.savefig("Growth_Distribution_at_%i_mins.png"%(i))
 			plt.show()
-			print np.sum(self.data[(i*10),1:]) #total probablility not conserved
-			x += np.sum(self.data[(i*10),1:])
-		print x
+			# print np.sum(self.data[(i*10),1:]) #total probablility not conserved
+			# x += np.sum(self.data[(i*10),1:])
+		# print x
 
 	def load_data(self,file):
-		self.data = np.loadtxt(file)
+		self.data = np.loadtxt(file, skiprows = 1)
+		self.params = np.loadtxt(file)[0]
 
 	def load_weighted_data(self,file):
-		self.weighted_data = np.loadtxt(file)
+		self.weighted_data = np.loadtxt(file, skiprows = 1)
+		self.params = np.loadtxt(file)[0]
+
+	def get_header(self):
+		self.header = str(str(self.init_no_particles) + " " + str(self.dt) + " " + str(self.max_agg_size) + " " + str(self.k) )
 
 def main():
-	sim = Smoluchowski(20000, 6000, 10)
+	sim = Smoluchowski(20000, 6000, 50)
+	#LOAD PREVIOUS DATA
 	sim.load_data("Reaggregation_data.txt")
 	sim.load_weighted_data("Reaggregatoin_weighted_data.txt")
-	# sim.run_sim()
+
+	#ANALYTICAL SOLUTION
 	# sim.run_analytical()
+
+	#RUN SIM AND OUTPUT
+	# sim.run_sim()
+	# sim.get_header()
+	# np.savetxt("Reaggregation_data.txt", sim.data, header = sim.header, comments='')
+	# np.savetxt("Reaggregatoin_weighted_data.txt", sim.weighted_data, header = sim.header, comments='')
+
+	#PLOT
 	sim.plot()
 	sim.plot_hist()
-	# np.savetxt("Reaggregation_data.txt", sim.data)
-	# np.savetxt("Reaggregatoin_weighted_data.txt", sim.weighted_data)
 main()
