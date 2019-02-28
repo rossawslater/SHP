@@ -5,20 +5,31 @@ import sys
 
 class Smoluchowski():
 	"""Simulator using Smoluchowski Eqn"""
-	def __init__(self, init_no_particles, sim_length, max_agg_size = 5, k = 6E-4, mu = 1.023):
-		self.init_no_particles = init_no_particles
-		self.sim_length = sim_length #number of time steps for simulation
-		# self.k = 3.167E-3 #Literature value of D for Pa
-		self.k = k
-		self.mu = mu
-		self.max_agg_size = (max_agg_size + 1)#+1 so we can index from 1 not 0
+	# def __init__(self, init_no_particles, sim_length, dt = 0.1, max_agg_size = 5, k = 6E-4, mu = 1.023):
+	def __init__(self,input):
+		#INITIAL PARAMETERS
+
+		# self.init_no_particles = init_no_particles
+		# self.sim_length = int(sim_length/dt) #number of time steps for simulation,
+		# self.dt = dt
+		# self.max_agg_size = (max_agg_size + 1)#+1 so we can index from 1 not 0
+		# self.k = k # self.k = 3.167E-3 #Literature value of D for Pa
+		# self.mu = mu
+
+		self.init_no_particles = int(input[0])
+		self.sim_length = int(int(input[1])/float(input[2])) #number of time steps for simulation,
+		self.dt = float(input[2])
+		self.max_agg_size = (int(input[3]) + 1)#+1 so we can index from 1 not 0
+		self.k = float(input[4])# self.k = 3.167E-3 #Literature value of D for Pa
+		self.mu = float(input[5])
+
+
 		# self.current_max_agg_size = 2 #need to adjust length of data array if using this?
+
+		#COUNTERS
 		self.aggregates = np.zeros(self.max_agg_size)
 		self.aggregates[1] = self.init_no_particles #set number of aggregate of size one to initial number of particles
 
-		self.data = np.zeros((self.sim_length, self.max_agg_size)) #+1 for tau
-
-		self.tau = 2/(self.k * self.init_no_particles) #t/tau needed to mimic plot from textbook
 		self.time = [] #list for holding time
 
 		self.current_no_aggregates = [] #empty lists for keeping track of aggregate and particle numbers over time
@@ -27,13 +38,13 @@ class Smoluchowski():
 		self.aggregate_count = self.init_no_particles #count of aggregates and particles in system is initallised as initial no particles
 		self.particle_count = self.init_no_particles
 
-		# self.dt = 0.1
-		self.dt = 0.05
-
+		#DATA ARRAYS FOR OUTPUT
+		self.data = np.zeros((self.sim_length, self.max_agg_size))
 		self.weighted_data = np.zeros((self.sim_length, self.max_agg_size))
+		self.init_ratio_data = np.zeros((self.sim_length, self.max_agg_size))
 
-		# self.gavins_times = [103,137,162,201,252,297]
-		self.gavins_times = range(0,25,1)
+		# self.times = [103,137,162,201,252,297] #times in gavin's data
+		self.times = range(0,25,1)
 
 	def produce(self,j,i):
 		self.aggregates[j] += (self.k/2 * (self.aggregates[i]*self.aggregates[j-i]*self.dt))
@@ -50,10 +61,14 @@ class Smoluchowski():
 
 	def get_j_counts_at_step(self,j,t):
 		# self.data[t,j]=self.aggregates[j]*j/self.init_no_particles
-		self.data[t,j]=self.aggregates[j]/self.init_no_particles
+		self.data[t,j]=self.aggregates[j]#/self.init_no_particles
 
 	def get_weighted_j_counts_at_step(self,j,t): #dont ned this as already probablility?
 		self.weighted_data[t,j] = (self.aggregates[j]*j)#/self.init_no_particles
+
+	def get_init_ratio_at_step(self,j,t):
+		# self.data[t,j]=self.aggregates[j]*j/self.init_no_particles
+		self.init_ratio_data[t,j]=self.aggregates[j]/self.init_no_particles
 
 	def get_aggregate_count(self):
 		self.current_no_aggregates.append(self.aggregate_count/self.init_no_particles)
@@ -80,6 +95,7 @@ class Smoluchowski():
 			# for j in range(1,self.current_max_agg_size):
 				self.get_j_counts_at_step(j,t)
 				self.get_weighted_j_counts_at_step(j,t)
+				self.get_init_ratio_at_step(j,t)
 
 				for i in range(1,self.max_agg_size):
 				# for i in range(1,self.current_max_agg_size):
@@ -93,10 +109,12 @@ class Smoluchowski():
 			self.time.append(t*self.dt)
 			self.data[t,0] = t*self.dt
 			self.weighted_data[t,0] = t*self.dt
+			self.init_ratio_data[t,0] = t*self.dt
 
 			print t*self.dt
 
 	def run_analytical(self):
+		self.tau = 2/(self.k * self.init_no_particles) #t/tau needed to mimic plot from textbook
 		for t in range(0,self.sim_length):
 			dt = self.dt * t
 			for j in range(1,self.max_agg_size):
@@ -111,6 +129,7 @@ class Smoluchowski():
 			print(i[1]/self.init_no_particles)
 
 	def plot(self):
+
 		for i in range(1,len(self.data[0])):#self.max_agg_size):
 			plt.plot(self.data[:,0],self.data[:,i], label = "N%i"%(i))
 
@@ -118,7 +137,18 @@ class Smoluchowski():
 		plt.ylabel("N/N Initial")
 		plt.title("Smoluchowski Aggregation Model")
 		x1,x2,y1,y2 = plt.axis()
-		plt.axis((x1,x2,y1,1.1))
+		plt.axis((x1,x2,y1,y2))
+		# plt.legend(bbox_to_anchor=(0.5, 0.8), loc=2, borderaxespad=0.)
+		plt.show()
+
+		for i in range(1,len(self.init_ratio_data[0])):#self.max_agg_size):
+			plt.plot(self.init_ratio_data[:,0],self.init_ratio_data[:,i], label = "N%i"%(i))
+
+		plt.xlabel("t")
+		plt.ylabel("N/N Initial")
+		plt.title("Smoluchowski Aggregation Model")
+		x1,x2,y1,y2 = plt.axis()
+		plt.axis((x1,x2,y1,y2))
 		# plt.legend(bbox_to_anchor=(0.5, 0.8), loc=2, borderaxespad=0.)
 		plt.show()
 
@@ -133,14 +163,14 @@ class Smoluchowski():
 		# plt.legend(bbox_to_anchor=(0.5, 0.8), loc=2, borderaxespad=0.)
 		plt.show()
 
-	def plot_hist(self):
+	def plot_hists(self, data):
 		x = 0
-		for i in self.gavins_times:
-			t = i*(self.dt)
-			print t
-			plt.plot(self.weighted_data[t,:])#, label = "N%i"%(i))
+		for i in self.times:
+			t = i/(self.dt)
+			# print i, t, t*self.dt
+			plt.plot(data[t,:])#, label = "N%i"%(i))
 			x1,x2,y1,y2 = plt.axis()
-			plt.axis((1,200,y1,2000))
+			plt.axis((1,len(data[0,:]),y1,2000))
 			plt.title("Distribution of Aggregates at %i Minutes"%(i))
 			plt.ylabel("Number of Bacteria in Agg of size N")
 			plt.xlabel("Aggregate Size N")
@@ -159,24 +189,37 @@ class Smoluchowski():
 		self.params = np.loadtxt(file)[0]
 
 	def get_header(self):
-		self.header = str(str(self.init_no_particles) + " " + str(self.dt) + " " + str(self.max_agg_size) + " " + str(self.k) + " " + str(self.mu) )
+		self.header = str(str(self.init_no_particles) + " " + str(self.dt) + " " + str(self.max_agg_size-1) + " " + str(self.k) + " " + str(self.mu))
+
+	def save(self):
+		self.get_header()
+		# np.savetxt("Reaggregation_data.txt", self.data, header = self.header, comments='')
+		# np.savetxt("Reaggregatoin_weighted_data.txt", self.weighted_data, header = self.header, comments='')
+		np.savetxt(str(self.header + ".txt"), self.data, header = self.header, comments='')
+		np.savetxt(str(self.header + " weighted.txt"), self.weighted_data, header = self.header, comments='')
 
 def main():
-	sim = Smoluchowski(20000, 6000, 50)
-	#LOAD PREVIOUS DATA
-	sim.load_data("Reaggregation_data.txt")
-	sim.load_weighted_data("Reaggregatoin_weighted_data.txt")
+	# sys.argv[1] = init_no_particles
+	# sys.argv[2] = sim_length
+	# sys.argv[3] = dt
+	# sys.argv[4] = max_agg_size
+	# sys.argv[5] = k
+	# sys.argv[6] = mu
+	# sim = Smoluchowski(init_no_particles, sim_length, dt, max_agg_size, k, mu)
+	sim = Smoluchowski(sys.argv[1:])
+	# sim = Smoluchowski(init_no_particles = 20000, sim_length = 300, dt = 0.05, max_agg_size = 50, k = 6E-4, mu = 1.023)
+	# #LOAD PREVIOUS DATA
+	sim.load_data("20000 0.05 51 0.0006 1.023.txt")
+	sim.load_weighted_data("20000 0.05 51 0.0006 1.023weighted.txt")
 
 	#ANALYTICAL SOLUTION
 	# sim.run_analytical()
 
 	#RUN SIM AND OUTPUT
 	# sim.run_sim()
-	# sim.get_header()
-	# np.savetxt("Reaggregation_data.txt", sim.data, header = sim.header, comments='')
-	# np.savetxt("Reaggregatoin_weighted_data.txt", sim.weighted_data, header = sim.header, comments='')
+	# sim.save()
 
 	#PLOT
 	sim.plot()
-	sim.plot_hist()
+	sim.plot_hists(sim.weighted_data)
 main()
