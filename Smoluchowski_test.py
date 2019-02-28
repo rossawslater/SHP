@@ -5,11 +5,12 @@ import sys
 
 class Smoluchowski():
 	"""Simulator using Smoluchowski Eqn"""
-	def __init__(self, init_no_particles, sim_length, max_agg_size = 5, k = 6E-4):
+	def __init__(self, init_no_particles, sim_length, max_agg_size = 5, k = 6E-4, mu = 1.023):
 		self.init_no_particles = init_no_particles
 		self.sim_length = sim_length #number of time steps for simulation
 		# self.k = 3.167E-3 #Literature value of D for Pa
 		self.k = k
+		self.mu = mu
 		self.max_agg_size = (max_agg_size + 1)#+1 so we can index from 1 not 0
 		# self.current_max_agg_size = 2 #need to adjust length of data array if using this?
 		self.aggregates = np.zeros(self.max_agg_size)
@@ -44,7 +45,7 @@ class Smoluchowski():
 			self.aggregates[j] -= (self.k*self.aggregates[j]*self.aggregates[i]*self.dt)
 
 	def grow(self):
-		self.aggregates[1] += 1.023*self.dt*self.aggregates[1]*10
+		self.aggregates[1] += self.mu*self.dt*self.aggregates[1]*10
 
 
 	def get_j_counts_at_step(self,j,t):
@@ -158,7 +159,7 @@ class Smoluchowski():
 		self.params = np.loadtxt(file)[0]
 
 	def get_header(self):
-		self.header = str(str(self.init_no_particles) + " " + str(self.dt) + " " + str(self.max_agg_size) + " " + str(self.k) )
+		self.header = str(str(self.init_no_particles) + " " + str(self.dt) + " " + str(self.max_agg_size) + " " + str(self.k) + " " + str(self.mu) )
 
 def main():
 	sim = Smoluchowski(20000, 6000, 50)
