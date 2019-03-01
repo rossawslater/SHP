@@ -9,14 +9,8 @@ class Smoluchowski():
 	def __init__(self,input):
 		#INITIAL PARAMETERS
 
-		# self.init_no_particles = init_no_particles
-		# self.sim_length = int(sim_length/dt) #number of time steps for simulation,
-		# self.dt = dt
-		# self.max_agg_size = (max_agg_size + 1)#+1 so we can index from 1 not 0
-		# self.k = k # self.k = 3.167E-3 #Literature value of D for Pa
-		# self.mu = mu
-
 		self.init_no_particles = int(input[0])
+		self.len_mins = int(input[1])
 		self.sim_length = int(int(input[1])/float(input[2])) #number of time steps for simulation,
 		self.dt = float(input[2])
 		self.max_agg_size = (int(input[3]) + 1)#+1 so we can index from 1 not 0
@@ -44,7 +38,7 @@ class Smoluchowski():
 		self.init_ratio_data = np.zeros((self.sim_length, self.max_agg_size))
 
 		# self.times = [103,137,162,201,252,297] #times in gavin's data
-		self.times = range(0,25,1)
+		self.times = range(0,100,10)
 
 	def produce(self,j,i):
 		self.aggregates[j] += (self.k/2 * (self.aggregates[i]*self.aggregates[j-i]*self.dt))
@@ -56,7 +50,7 @@ class Smoluchowski():
 			self.aggregates[j] -= (self.k*self.aggregates[j]*self.aggregates[i]*self.dt)
 
 	def grow(self):
-		self.aggregates[1] += self.mu*self.dt*self.aggregates[1]*10
+		self.aggregates[1] += self.mu*self.dt*self.aggregates[1]
 
 
 	def get_j_counts_at_step(self,j,t):
@@ -87,7 +81,7 @@ class Smoluchowski():
 	def run_sim(self):
 		# self.current_max_agg_size = self.max_agg_size
 		for t in range(0,self.sim_length):
-			# self.grow()
+			self.grow()
 			self.get_aggregate_count()
 			self.get_particle_count()
 
@@ -170,11 +164,11 @@ class Smoluchowski():
 			# print i, t, t*self.dt
 			plt.plot(data[t,:])#, label = "N%i"%(i))
 			x1,x2,y1,y2 = plt.axis()
-			plt.axis((1,len(data[0,:]),y1,2000))
+			plt.axis((1,len(data[0,:]),y1,20000))
 			plt.title("Distribution of Aggregates at %i Minutes"%(i))
 			plt.ylabel("Number of Bacteria in Agg of size N")
 			plt.xlabel("Aggregate Size N")
-			plt.savefig("Growth_Distribution_at_%i_mins.png"%(i))
+			# plt.savefig("Growth_Distribution_at_%i_mins.png"%(i))
 			plt.show()
 			# print np.sum(self.data[(i*10),1:]) #total probablility not conserved
 			# x += np.sum(self.data[(i*10),1:])
@@ -189,28 +183,18 @@ class Smoluchowski():
 		self.params = np.loadtxt(file)[0]
 
 	def get_header(self):
-		self.header = str(str(self.init_no_particles) + " " + str(self.dt) + " " + str(self.max_agg_size-1) + " " + str(self.k) + " " + str(self.mu))
+		self.header = str(str(self.init_no_particles) + " " + str(self.len_mins) + " " + str(self.dt) + " " + str(self.max_agg_size-1) + " " + str(self.k) + " " + str(self.mu))
 
 	def save(self):
 		self.get_header()
-		# np.savetxt("Reaggregation_data.txt", self.data, header = self.header, comments='')
-		# np.savetxt("Reaggregatoin_weighted_data.txt", self.weighted_data, header = self.header, comments='')
-		np.savetxt(str(self.header + ".txt"), self.data, header = self.header, comments='')
-		np.savetxt(str(self.header + " weighted.txt"), self.weighted_data, header = self.header, comments='')
+		np.savetxt(str(self.header + " growth.txt"), self.data, header = self.header, comments='')
+		np.savetxt(str(self.header + " growth weighted.txt"), self.weighted_data, header = self.header, comments='')
 
 def main():
-	# sys.argv[1] = init_no_particles
-	# sys.argv[2] = sim_length
-	# sys.argv[3] = dt
-	# sys.argv[4] = max_agg_size
-	# sys.argv[5] = k
-	# sys.argv[6] = mu
-	# sim = Smoluchowski(init_no_particles, sim_length, dt, max_agg_size, k, mu)
 	sim = Smoluchowski(sys.argv[1:])
-	# sim = Smoluchowski(init_no_particles = 20000, sim_length = 300, dt = 0.05, max_agg_size = 50, k = 6E-4, mu = 1.023)
 	# #LOAD PREVIOUS DATA
-	sim.load_data("20000 0.05 51 0.0006 1.023.txt")
-	sim.load_weighted_data("20000 0.05 51 0.0006 1.023weighted.txt")
+	sim.load_data("20000 300 0.05 100 0.0006 1.023.txt")
+	sim.load_weighted_data("20000 300 0.05 100 0.0006 1.023 weighted.txt")
 
 	#ANALYTICAL SOLUTION
 	# sim.run_analytical()
@@ -220,6 +204,6 @@ def main():
 	# sim.save()
 
 	#PLOT
-	sim.plot()
+	# sim.plot()
 	sim.plot_hists(sim.weighted_data)
 main()
