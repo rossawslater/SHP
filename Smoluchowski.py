@@ -193,17 +193,17 @@ class Smoluchowski():
 def main():
 	sim = Smoluchowski(sys.argv[1:])
 	# #LOAD PREVIOUS DATA
-	sim.load_data("20000 300 0.05 100 0.0006 1.023.txt")
-	sim.load_weighted_data("20000 300 0.05 100 0.0006 1.023 weighted.txt")
+	# sim.load_data("20000 300 0.05 100 0.0006 1.023.txt")
+	# sim.load_weighted_data("20000 300 0.05 100 0.0006 1.023 weighted.txt")
 
 	#ANALYTICAL SOLUTION
 	# sim.run_analytical()
 
 	#RUN SIM AND OUTPUT
-	# sim.run_sim()
-	# sim.save()
+	sim.run_sim()
+	sim.save()
 
 	#PLOT
 	# sim.plot()
-	sim.plot_hists(sim.weighted_data)
+	# sim.plot_hists(sim.weighted_data)
 main()
