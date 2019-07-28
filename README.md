@@ -1,3 +1,3 @@
 # SHP
 Bacterial Aggregation Modelling - 
-This project will model bacterial aggrecating using an adapted version of the Smoluchowski equation
+This project will modelled bacterial aggregation using a version of the Smoluchowski equation adapted to account for bacterial growth.
